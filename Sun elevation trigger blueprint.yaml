@@ -9,7 +9,7 @@ blueprint:
       description: The switch entity to be controlled.
       selector:
         entity:
-          domain: switch
+          domain: [light, switch, input_boolean]
 
     on_offset:
       name: On Offset (degrees)
