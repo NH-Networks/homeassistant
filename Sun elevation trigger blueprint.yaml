@@ -1,0 +1,61 @@
+blueprint:
+  name: Sun Elevation Switch Control
+  description: |
+    This blueprint allows you to control a switch based on the sun's elevation, with adjustable offset degrees for turning it on and off.
+
+input:
+  switch_entity:
+    name: Switch Entity
+    description: The switch entity to be controlled.
+    selector:
+      entity:
+        domain: switch
+
+  on_offset:
+    name: On Offset (degrees)
+    description: The offset in degrees for the sun's elevation to turn the switch on.
+    default: 0
+    selector:
+      number:
+        min: -90
+        max: 90
+        step: 1
+        mode: slider
+
+  off_offset:
+    name: Off Offset (degrees)
+    description: The offset in degrees for the sun's elevation to turn the switch off.
+    default: 0
+    selector:
+      number:
+        min: -90
+        max: 90
+        step: 1
+        mode: slider
+
+mode: single
+
+trigger:
+  platform: sun
+  event: sunrise, sunset
+
+action:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sun.sun
+            attribute: elevation
+            above: "{{ state_attr('sun.sun', 'elevation') + on_offset }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input switch_entity
+      - conditions:
+          - condition: numeric_state
+            entity_id: sun.sun
+            attribute: elevation
+            below: "{{ state_attr('sun.sun', 'elevation') + off_offset }}"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_entity
