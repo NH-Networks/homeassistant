@@ -50,7 +50,7 @@ action:
             target:
               entity_id: !input switch_entity
       - conditions:
-          - condition: numeric_state  
+          - condition: numeric_state
             entity_id: sun.sun
             attribute: elevation
             below: "{{ state_attr('sun.sun', 'elevation') + off_offset }}"
