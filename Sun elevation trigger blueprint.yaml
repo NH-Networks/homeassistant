@@ -1,7 +1,7 @@
 blueprint:
   name: Sun Elevation Switch Control
   domain: automation
-  description: This blueprint allows you to control a switch based on the sun's elevation, with adjustable offset degrees for turning it on and off.
+  description: This blueprint allows you to control a switch based on the sun's elevation, with adjustable offset degrees for turning it on and off. v2
   source_url: https://raw.githubusercontent.com/NH-Networks/homeassistant/main/Sun%20elevation%20trigger%20blueprint.yaml
   input:
     switch_entity:
@@ -17,8 +17,8 @@ blueprint:
       default: 0
       selector:
         number:
-          min: -30
-          max: 30
+          min: -90
+          max: 90
           step: 1
           mode: slider
 
@@ -28,8 +28,8 @@ blueprint:
       default: 0
       selector:
         number:
-          min: -30
-          max: 30
+          min: -90
+          max: 90
           step: 1
           mode: slider
 
@@ -41,20 +41,26 @@ trigger:
 action:
   - choose:
       - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float > trigger.from_state.state | float }}"
+        sequence:
           - condition: numeric_state
             entity_id: sun.sun
-            attribute: elevation
-            above: "{{ state_attr('sun.sun', 'elevation') + on_offset }}"
-        sequence:
-          - service: switch.turn_on
+            below: "{{ state_attr('sun.sun', 'elevation') + off_offset }}"
+            for:
+              minutes: 5
+          - service: switch.turn_off
             target:
               entity_id: !input switch_entity
       - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state | float < trigger.from_state.state | float }}"
+        sequence:
           - condition: numeric_state
             entity_id: sun.sun
-            attribute: elevation
-            below: "{{ state_attr('sun.sun', 'elevation') + off_offset }}"
-        sequence:
-          - service: switch.turn_off
+            above: "{{ state_attr('sun.sun', 'elevation') + on_offset }}"
+            for:
+              minutes: 5
+          - service: switch.turn_on
             target:
               entity_id: !input switch_entity
