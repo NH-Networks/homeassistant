@@ -33,8 +33,9 @@ blueprint:
           mode: slider
 
 trigger:
-  platform: sun
-  event: sunrise, sunset
+  platform: numeric_state
+  entity_id: sun.sun
+  attribute: elevation
 
 action:
   - choose:
