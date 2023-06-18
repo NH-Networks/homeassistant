@@ -1,6 +1,7 @@
 blueprint:
   name: Sun Elevation Switch Control
   domain: automation
+  description: This blueprint allows you to control a switch based on the sun's elevation, with adjustable offset degrees for turning it on and off.
   input:
     switch_entity:
       name: Switch Entity
