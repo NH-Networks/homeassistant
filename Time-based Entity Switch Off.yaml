@@ -1,27 +1,22 @@
 blueprint:
   name: Time-based Entity Switch Off
-  description: |
-    This blueprint allows you to switch off an entity based on a time set in a time helper.
-
-input:
-  entity:
-    name: Entity
-    description: The entity to be switched off.
-    selector:
-      entity:
-
-  time_helper:
-    name: Time Helper
-    description: The time helper entity that determines the switch-off time.
-    selector:
-      entity:
-        domain: input_datetime
-
-mode: single
+  domain: automation
+  input:
+    entity:
+      name: Entity
+      description: The entity to be switched off.
+      selector:
+        entity:
+    time_helper:
+      name: Time Helper
+      description: The time helper entity that determines the switch-off time.
+      selector:
+        entity:
+          domain: input_datetime
 
 trigger:
   platform: time
-  at: !input time_helper
+  at: input_datetime.time_helper
 
 action:
   - service: homeassistant.turn_off
