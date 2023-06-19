@@ -1,0 +1,69 @@
+blueprint:
+  domain: automation
+  name: Easier Day/Night Detection
+  description: An easier way to detect day and night detection
+  input:
+    input_select_day_night:
+      name: Input Select
+      description: Add a input select helper here
+      selector:
+        entity:
+          domain: input_select
+    sunrise_offset:
+      name: Sunrise Offset
+      description: Set the elevation of the sunrise see link for specific values https://gml.noaa.gov/grad/solcalc/
+      default: 0
+      selector:
+        number:
+          max: 10
+          min: -10
+          unit_of_measurement: °
+          mode: slider
+          step: .1
+    sunset_offset:
+      name: Sunset Offset
+      description: Set the elevation of the sunset see link for specific values https://gml.noaa.gov/grad/solcalc/
+      default: 0
+      selector:
+        number:
+          max: 10
+          min: -10
+          unit_of_measurement: °
+          mode: slider
+          step: .1
+
+trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    below: !input sunset_offset
+    attribute: elevation
+  - platform: numeric_state
+    entity_id: sun.sun
+    above: !input sunrise_offset
+    attribute: elevation
+condition: []
+action:
+  - if:
+      - condition: numeric_state
+        entity_id: sun.sun
+        attribute: elevation
+        above: !input sunrise_offset
+    then:
+      - service: input_select.select_option
+        data:
+          option: Day
+        target:
+          entity_id: !input input_select_day_night
+    else:
+      - if:
+          - condition: numeric_state
+            entity_id: sun.sun
+            attribute: elevation
+            below: !input sunset_offset
+        then:
+          - service: input_select.select_option
+            data:
+              option: Night
+            target:
+              entity_id: !input input_select_day_night
+mode: single
