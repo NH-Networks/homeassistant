@@ -84,7 +84,7 @@ action:
         sequence:
           - service: input_select.select_option
             data:
-              option: Day
+              option: Dag
             target:
               entity_id: !input input_select_day_night
       - conditions:
@@ -95,7 +95,7 @@ action:
         sequence:
           - service: input_select.select_option
             data:
-              option: Night
+              option: Nacht
             target:
               entity_id: !input input_select_day_night
       - conditions:
@@ -106,7 +106,7 @@ action:
         sequence:
           - service: input_select.select_option
             data:
-              option: Dusk
+              option: Schemer
             target:
               entity_id: !input input_select_day_night
       - conditions:
@@ -117,7 +117,7 @@ action:
         sequence:
           - service: input_select.select_option
             data:
-              option: Dawn
+              option: Ochtend
             target:
               entity_id: !input input_select_day_night
 
