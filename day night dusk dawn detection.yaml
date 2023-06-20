@@ -2,7 +2,6 @@ blueprint:
   domain: automation
   name: Easier Day/Night/Dusk/Dawn Detection
   description: An easier way to detect day/night and dusk/dawn detection
-  source: https://raw.githubusercontent.com/NH-Networks/homeassistant/main/day%20night%20dusk%20dawn%20detection.yaml
   input:
     input_select_day_night:
       name: Input Select
