@@ -11,7 +11,7 @@ blueprint:
           domain: input_select
     sunrise_offset:
       name: Sunrise Offset
-      description: Set the elevation of the sunrise. See link for specific values: https://gml.noaa.gov/grad/solcalc/
+      description: Set the elevation of the sunrise. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
@@ -22,7 +22,7 @@ blueprint:
           step: .1
     sunset_offset:
       name: Sunset Offset
-      description: Set the elevation of the sunset. See link for specific values: https://gml.noaa.gov/grad/solcalc/
+      description: Set the elevation of the sunset. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
@@ -33,7 +33,7 @@ blueprint:
           step: .1
     dawn_offset:
       name: Dawn Offset
-      description: Set the elevation of the dawn. See link for specific values: https://gml.noaa.gov/grad/solcalc/
+      description: Set the elevation of the dawn. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
@@ -44,7 +44,7 @@ blueprint:
           step: .1
     dusk_offset:
       name: Dusk Offset
-      description: Set the elevation of the dusk. See link for specific values: https://gml.noaa.gov/grad/solcalc/
+      description: Set the elevation of the dusk. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
