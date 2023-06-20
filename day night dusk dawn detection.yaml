@@ -1,7 +1,8 @@
 blueprint:
   domain: automation
-  name: Easier Day/Night Detection
-  description: An easier way to detect day and night detection
+  name: Easier Day/Night/Dusk/Dawn Detection
+  description: An easier way to detect day/night and dusk/dawn detection
+  source: 
   input:
     input_select_day_night:
       name: Input Select
