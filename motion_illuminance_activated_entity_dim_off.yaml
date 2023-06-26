@@ -126,7 +126,7 @@ blueprint:
           domain: scene
     target_dim_entity:
       name: (OPTIONAL) Dim State SCENE entity
-      description: If defined, this scene will be run instead of Turn-off SCENE entity. This can be helpful when using target entities of type scene or script.
+      description: If defined, this scene will be run instead of Turn-off SCENE entity, if blocker entity is on.
       default:
       selector:
         entity:
