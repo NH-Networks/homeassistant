@@ -6,19 +6,20 @@ blueprint:
       name: Entity
       description: The entity to be switched off.
       selector:
-        entity:
+        entity: {}
     time_helper:
       name: Time Helper
       description: The time helper entity that determines the switch-off time.
       selector:
         entity:
-          domain: input_datetime
-
+          domain:
+          - input_datetime
+          multiple: false
+  source_url: https://raw.githubusercontent.com/NH-Networks/homeassistant/main/Time-based%20Entity%20Switch%20Off.yaml
 trigger:
   platform: time
   at: input_datetime.time_helper
-
 action:
-  - service: homeassistant.turn_off
-    target:
-      entity_id: !input entity
+- service: homeassistant.turn_off
+  target:
+    entity_id: !input entity

@@ -8,117 +8,117 @@ blueprint:
       description: Add an input select helper here
       selector:
         entity:
-          domain: input_select
+          domain:
+          - input_select
+          multiple: false
     sunrise_offset:
       name: Sunrise Offset
-      description: Set the elevation of the sunrise. See link for specific values https://gml.noaa.gov/grad/solcalc/
+      description: Set the elevation of the sunrise. See link for specific values
+        https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
-          max: 10
-          min: -10
+          max: 10.0
+          min: -10.0
           unit_of_measurement: °
           mode: slider
-          step: .1
+          step: 0.1
     sunset_offset:
       name: Sunset Offset
       description: Set the elevation of the sunset. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
-          max: 10
-          min: -10
+          max: 10.0
+          min: -10.0
           unit_of_measurement: °
           mode: slider
-          step: .1
+          step: 0.1
     dawn_offset:
       name: Dawn Offset
       description: Set the elevation of the dawn. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
-          max: 10
-          min: -10
+          max: 10.0
+          min: -10.0
           unit_of_measurement: °
           mode: slider
-          step: .1
+          step: 0.1
     dusk_offset:
       name: Dusk Offset
       description: Set the elevation of the dusk. See link for specific values https://gml.noaa.gov/grad/solcalc/
       default: 0
       selector:
         number:
-          max: 10
-          min: -10
+          max: 10.0
+          min: -10.0
           unit_of_measurement: °
           mode: slider
-          step: .1
-
+          step: 0.1
+  source_url: https://raw.githubusercontent.com/NH-Networks/homeassistant/main/day%20night%20dusk%20dawn%20detection.yaml
 trigger:
-  - platform: numeric_state
-    entity_id: sun.sun
-    below: !input dusk_offset
-    attribute: elevation
-  - platform: numeric_state
-    entity_id: sun.sun
-    above: !input dawn_offset
-    attribute: elevation
-  - platform: numeric_state
-    entity_id: sun.sun
-    below: !input sunset_offset
-    attribute: elevation
-  - platform: numeric_state
-    entity_id: sun.sun
-    above: !input sunrise_offset
-    attribute: elevation
-
+- platform: numeric_state
+  entity_id: sun.sun
+  below: !input dusk_offset
+  attribute: elevation
+- platform: numeric_state
+  entity_id: sun.sun
+  above: !input dawn_offset
+  attribute: elevation
+- platform: numeric_state
+  entity_id: sun.sun
+  below: !input sunset_offset
+  attribute: elevation
+- platform: numeric_state
+  entity_id: sun.sun
+  above: !input sunrise_offset
+  attribute: elevation
 condition: []
-
 action:
-  - choose:
-      - conditions:
-          - condition: numeric_state
-            entity_id: sun.sun
-            attribute: elevation
-            above: !input sunrise_offset
-        sequence:
-          - service: input_select.select_option
-            data:
-              option: Dag
-            target:
-              entity_id: !input input_select_day_night
-      - conditions:
-          - condition: numeric_state
-            entity_id: sun.sun
-            attribute: elevation
-            below: !input sunset_offset
-        sequence:
-          - service: input_select.select_option
-            data:
-              option: Nacht
-            target:
-              entity_id: !input input_select_day_night
-      - conditions:
-          - condition: numeric_state
-            entity_id: sun.sun
-            attribute: elevation
-            below: !input dusk_offset
-        sequence:
-          - service: input_select.select_option
-            data:
-              option: Schemer
-            target:
-              entity_id: !input input_select_day_night
-      - conditions:
-          - condition: numeric_state
-            entity_id: sun.sun
-            attribute: elevation
-            above: !input dawn_offset
-        sequence:
-          - service: input_select.select_option
-            data:
-              option: Ochtend
-            target:
-              entity_id: !input input_select_day_night
-
+- choose:
+  - conditions:
+    - condition: numeric_state
+      entity_id: sun.sun
+      attribute: elevation
+      above: !input sunrise_offset
+    sequence:
+    - service: input_select.select_option
+      data:
+        option: Dag
+      target:
+        entity_id: !input input_select_day_night
+  - conditions:
+    - condition: numeric_state
+      entity_id: sun.sun
+      attribute: elevation
+      below: !input sunset_offset
+    sequence:
+    - service: input_select.select_option
+      data:
+        option: Nacht
+      target:
+        entity_id: !input input_select_day_night
+  - conditions:
+    - condition: numeric_state
+      entity_id: sun.sun
+      attribute: elevation
+      below: !input dusk_offset
+    sequence:
+    - service: input_select.select_option
+      data:
+        option: Schemer
+      target:
+        entity_id: !input input_select_day_night
+  - conditions:
+    - condition: numeric_state
+      entity_id: sun.sun
+      attribute: elevation
+      above: !input dawn_offset
+    sequence:
+    - service: input_select.select_option
+      data:
+        option: Ochtend
+      target:
+        entity_id: !input input_select_day_night
 mode: single

@@ -1,0 +1,329 @@
+blueprint:
+  name: Heating Control and Window Sensor v2
+  description: Control your heating and cooling with options for group home, if temp is below
+    a specific value, set temp, and heating between specific times.
+  domain: automation
+  input:
+    state:
+      name: Scheduled State
+      description: The desired state.
+      selector:
+        entity:
+          domain: sensor
+    thermostat:
+      name: Climate Device
+      description: The climate device to use.
+      selector:
+        entity:
+          domain: climate
+    manual_control:
+      name: Manual Temperature Control
+      description: Check if thermostat control should not be automated
+      selector:
+        entity:
+          domain: input_boolean
+
+    door_sensors:
+      name: Group of Door or Window Sensors
+      description: Check if doors or windows are open
+      default: []
+      selector:
+        entity:
+          domain: group
+    heating_grace_period:
+      name: Grace period (heating)
+      description: Amount of time you're allowed to leave doors open before action is taken
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 20
+          step: 1
+          mode: slider
+
+    groupname:
+      name: Person Group
+      description: The group of people that have to be home.
+      default: []
+      selector:
+        entity:
+          domain: group
+    group_presence:
+      name: Group Presence
+      description: Heat only if Person of Group was present in a given amount of time
+      default: 30
+      selector:
+        number:
+          min: 5
+          max: 60
+          step: 1
+          mode: slider
+
+    min_temp_heat:
+      name: Minimum outdoor temperature to activate heating
+      description: If outdoor temperature is below this value and someone is home, it turns
+        heating on.
+      default: 14
+      selector:
+        number:
+          min: 12.0
+          max: 18.0
+          step: 0.5
+          mode: slider
+
+    temp_normal_heat:
+      name: "Normal: Heating Temperature Target"
+      description: Target temperature when in normal mode
+      default: 18
+      selector: &heating_target
+        number:
+          min: 14.0
+          max: 25.0
+          step: 0.5
+          mode: slider
+    temp_toasty_heat:
+      name: "Toasty: Heating Temperature Target"
+      description: Target temperature when in toasty mode
+      default: 20
+      selector: *heating_target
+    temp_energy_heat:
+      name: Energy Saving Temperature Target (Winter)
+      description: When away or doors open, keep the Energy Saving Temperature
+      default: 16
+      selector: *heating_target
+    temp_sleep_heat:
+      name: "Sleep: Heating Temperature Target"
+      description: Target temperature when in sleep mode
+      default: 16
+      selector: *heating_target
+
+    vacation:
+      name: High temperature limit (vacation mode)
+      description: When on vacation, turn on AC if temperature exceeds this setting
+      default: 26
+      selector:
+        number:
+          min: 20.0
+          max: 28.0
+          step: 0.5
+          mode: slider
+
+variables:
+  temp_normal_heat: !input 'temp_normal_heat'
+  temp_toasty_heat: !input 'temp_toasty_heat'
+  temp_sleep_heat: !input 'temp_sleep_heat'
+  temp_energy_heat: !input 'temp_energy_heat'
+
+
+  vacation: !input 'vacation'
+
+mode: single
+
+trigger:
+- platform: homeassistant
+  event: start
+- platform: event
+  event_type: automation_reloaded
+
+- platform: state
+  entity_id:
+    # react when people come home or leave
+    # not sure how this interacts with the time condition in "people_home"
+    - !input 'groupname'
+    # react when scheduled state changes
+    - !input 'state'
+    # react when manual mode control is adjusted
+    - !input 'manual_control'
+
+# reactivate heating/cooling immediately once doors are all closed
+- platform: state
+  entity_id: !input 'door_sensors'
+  to: 'off'
+
+# take action after a few minutes of leaving doors open
+- platform: state
+  entity_id: !input 'door_sensors'
+  for: &heating_grace_period
+    hours: 0
+    minutes: !input 'heating_grace_period'
+    seconds: 0
+  to: 'on'
+
+
+# react to changes in outside temperature
+- platform: numeric_state
+  entity_id: weather.thuis
+  attribute: temperature
+  above: !input 'min_temp_heat'
+- platform: numeric_state
+  entity_id: weather.thuis
+  attribute: temperature
+  below: !input 'min_temp_heat'
+
+
+condition:
+- condition: not
+  conditions:
+  - condition: state
+    entity_id: !input 'state'
+    state: unavailable
+
+action:
+- choose:
+
+  # automation is disabled
+  - conditions:
+    - condition: state
+      entity_id: !input 'manual_control'
+      state: 'on'
+    sequence:
+
+  # vacation mode
+  # set the thermostat to a range that's not too hot, not too cold
+  - conditions:
+    - condition: state
+      entity_id: !input 'state'
+      state: vacation
+    sequence:
+    - service: climate.set_temperature
+      data:
+        # set the vacation mode temperature range; both heating and cooling are allowed
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ vacation }}'
+
+  # basic heating rule for "normal" state
+  # - outdoor temp is below 'min_temp_heat'; and
+  # - doors/windows are closed; and
+  # - someone is at home, or has been home in the past 'group_presence' minutes
+  # THEN: turn on thermostat and set target temperature to 'temp_normal_heat'
+  - conditions:
+    - condition: state
+      entity_id: !input 'state'
+      state: normal
+    - &heating_allowed
+      condition: numeric_state
+      entity_id: weather.thuis
+      attribute: temperature
+      below: !input 'min_temp_heat'
+    - &doors_closed
+      condition: state
+      entity_id: !input 'door_sensors'
+      state: 'off'
+    - &people_home
+      condition: not
+      conditions:
+      - condition: state
+        entity_id: !input 'groupname'
+        for:
+          hours: 0
+          minutes: !input 'group_presence'
+          seconds: 0
+        state: not_home
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ temp_normal_heat }}'
+
+  # sleep heating rule ("sleep" state)
+  # re-uses all the logic from the basic heating rule
+  # we like it cold in the house when we're sleeping
+  - conditions:
+    - condition: state
+      entity_id: !input 'state'
+      state: sleep
+    - *heating_allowed
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ temp_sleep_heat }}'
+
+  # extra-toasty heating rule ("toasty" state)
+  # re-uses all the logic from the basic heating rule
+  # special mode for the winter so you don't wake up to a freezing cold house
+  - conditions:
+    - condition: state
+      entity_id: !input 'state'
+      state: toasty
+    - *heating_allowed
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ temp_toasty_heat }}'
+
+  # explicit energy heating rule ("energy-saving" state)
+  # re-uses all the logic from the basic heating rule
+  # used if we know no one is going to be home for a while
+  - conditions:
+    - condition: state
+      entity_id: !input 'state'
+      state: energy-saving
+    - *heating_allowed
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ temp_energy_heat }}'
+
+
+  # windows open while it's cold outside
+  # grace period has expired
+  # never turn off the heat, this is Canada - just crank down the thermostat
+  # send a notification
+  # note: there is a gap of 'grace_period' in which the default rule will be used
+  - conditions:
+    - *heating_allowed
+    - condition: state
+      entity_id: !input 'door_sensors'
+      state: 'on'
+      for: *heating_grace_period
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ (temp_energy_heat/2.0) | int }}'
+    - service: notify.notify
+      data:
+        title: Doors/windows open
+        message: "It's not a good time to leave your doors and windows open"
+
+  # windows open while it's warm outside
+  # grace period has expired
+  # put AC at energy saving temperature
+  # note: there is a gap of 'grace_period' in which the default rule will be used
+
+
+  # energy saving heating rule for when no one is at home / has been at home for 'group_presence' minutes
+  - conditions:
+    - *heating_allowed
+    - condition: state
+      entity_id: !input 'groupname'
+      for:
+        hours: 0
+        minutes: !input 'group_presence'
+        seconds: 0
+      state: not_home
+    sequence:
+    - service: climate.set_temperature
+      data:
+        entity_id: !input 'thermostat'
+        hvac_mode: heat
+        temperature: '{{ temp_energy_heat }}'
+
+
+  # safe default - outside temperature is comfortable enough or some corner case we haven't directly accounted for
+  # at least the house won't break
+  default:
+  - service: climate.set_temperature
+    data:
+      entity_id: !input 'thermostat'
+      hvac_mode: heat
+      temperature: '{{ vacation }}'
